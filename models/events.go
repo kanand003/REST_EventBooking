@@ -61,3 +61,33 @@ func GetAllEvents() ([]Event, error) {
 	}
 	return events, nil
 }
+
+func GetEventByID(id int64) (*Event, error) {
+	// Don't use SELECT * - specify columns in the correct order to match the Scan() call
+	query := `SELECT id, name, description, location, start_time, end_time, created_at, updated_at, user_id 
+              FROM events WHERE id = ?`
+	row := db.DB.QueryRow(query, id)
+
+	var event Event
+	err := row.Scan(&event.ID, &event.Name, &event.Description, &event.Location,
+		&event.StartTime, &event.EndTime, &event.CreatedAt, &event.UpdatedAt, &event.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return &event, nil
+}
+
+func (event Event) Update() error {
+	query := `
+	UPDATE events
+	SET name = ?, description = ?, location = ?, start_time = ?, end_time = ?, user_id = ?
+	WHERE id = ?`
+	statement, err := db.DB.Prepare(query)
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+	_, err = statement.Exec(event.Name, event.Description, event.Location,
+		event.StartTime, event.EndTime, event.UserID, event.ID)
+	return err
+}
