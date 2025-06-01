@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/rest-api-event/db"
 	"github.com/rest-api-event/utils"
 )
@@ -33,4 +35,20 @@ func (u User) Save() error {
 
 	u.ID = userid
 	return err
+}
+
+func (u User) ValidateCredentials() error {
+	query := "SELECT id, password FROM users WHERE email = ?"
+	row := db.DB.QueryRow(query, u.Email)
+
+	var retrievedPassword string
+	err := row.Scan(&u.ID, &retrievedPassword)
+	if err != nil {
+		return err
+	}
+	passwordIsValid := utils.CheckPasswordHash(u.Password, retrievedPassword)
+	if !passwordIsValid {
+		return errors.New("invalid credentials")
+	}
+	return nil
 }
