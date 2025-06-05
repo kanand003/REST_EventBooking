@@ -1,6 +1,6 @@
 PUT http://localhost:8080/events/1 
 content-type: application/json
-
+authorization: 
 {
   "name": "Updated Test Event",
   "description": "This is an updated test event",
